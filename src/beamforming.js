@@ -322,18 +322,16 @@ var BeamForming = function(conf) {
 		var canvasDims = [ context.canvas.width, context.canvas.height ];
 
 		var canvasRegion = {};
-		canvasRegion.topLeft = this.modelToImage(simArea.topLeft(),
-				this.config.simArea, canvasDims);
-		canvasRegion.bottomRight = this.modelToImage(simArea.bottomRight(),
-				this.config.simArea, canvasDims);
-		canvasRegion.size = VecUtil.sub(canvasRegion.bottomRight,
-				canvasRegion.topLeft);
+		canvasRegion.topLeft 	 = this.modelToImage(simArea.topLeft(), 	this.config.simArea, canvasDims);
+		canvasRegion.bottomRight = this.modelToImage(simArea.bottomRight(), this.config.simArea, canvasDims);
+		canvasRegion.size = VecUtil.sub(canvasRegion.bottomRight, canvasRegion.topLeft);
 		canvasRegion.size[1] = Math.abs(canvasRegion.size[1]);
 
 		// get the image data to manipulate
-		var ibuff = context.getImageData(canvasRegion.topLeft[0],
-				canvasRegion.topLeft[1], canvasRegion.size[0],
-				canvasRegion.size[1]);
+		var ibuff = context.getImageData(
+				canvasRegion.topLeft[0], canvasRegion.topLeft[1], 
+				canvasRegion.size[0], canvasRegion.size[1]
+		);
 
 		var w = ibuff.width, h = ibuff.height;
 
@@ -435,8 +433,9 @@ var BeamForming = function(conf) {
 					ibuff.data[ip + 2] = 0; // blue
 					ibuff.data[ip + 3] = 255; // alpha
 				}
-			}
-		}
+				
+			} //horizontal loop
+		} //vertical loop
 
 		// render the emitters as green pixels
 		for ( var ei in this.config.emitters) {
