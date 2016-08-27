@@ -16,6 +16,14 @@
   </a>.
 **/
 
+
+/**
+ * Multidimensional real-valued Vector class implemented as a library of static 
+ * methods accepting standard ECMAscript Number arrays so that the JS engine
+ * may be able to optimise some operations better.
+ * The result of any operation will usually be a high precision type because of the involvement of Math.PI and Math.cos etc.
+ *    
+ * @static */
 var VecUtil = {
 	__prefixesMacro:['k','M','G','T','P'],
 	__prefixesMicro:['m','μ','n','p','f'],
@@ -63,6 +71,9 @@ var VecUtil = {
 		return {radius: m, angle:ang};
 	},
 
+	/** Handy routine to write a quantity as a string with appropriate SI scaling prefixes 
+	 * prepended to the basic SI unit of measurement, which can be easier to 
+	 * understand for most people than scientific notation. */
 	toEngFormat: function(val, baseSIUnit) {
 		if (val==0) return "0"+baseSIUnit;
 		var absval = Math.abs(val);
@@ -83,7 +94,11 @@ var VecUtil = {
 }
 
 
-/** Create from VecUtils arrays for smallest valued corner and size.*/
+/** Specify an axis-aligned box from number arrays compatible with VecUtils.
+ * @constructor
+ * @param {Number[]} minPos The corner of the box with the least coordinates. 
+ * @param {Number[]} size 	The box dimensions.
+ * */
 var Box2D = function(minPos, size) {
   return {
      minCorner: minPos
@@ -96,9 +111,28 @@ var Box2D = function(minPos, size) {
 }
 
 
+/**
+ * Template for an Emitter, although these are always created by the client. 
+ * @class
+ * @param props		An object to override the default properties of the created Emitter. */
+var Emitter = function(props) {
+	return {
+		id: 		props.id 			|| 'E0', 
+		signalID: 	props.signalID 		|| 'S0', 
+		emitterType:props.emitterType 	|| 'Omni', 	  //Omni is the only one supported.
+		delay:		props.delay 		|| 0, 
+		amplitude:	props.amplitude		|| 30, 
+		position:	props.position 		|| [ 0.0, 0.0], 
+		direction:	props.direction		|| [0,1], 	  //Not supported in sim yet.
+		halfAngleRad:props.halfAngleRad	|| Math.PI,   //Not supported in sim yet.
+		phaseCache: null	// Not used yet, but may memoize phase offset of propagated wave in future.
+	};
+}
+
+
 /** Beamforming functionality assuming a rendering function will be provided later on demand by the client.
  * 
- *  @param conf The wave transport scenario contains properties for a medium, simArea, signals, emitters, reflectors, 
+ *  @param {Object} conf 	The wave transport scenario contains properties for a medium, simArea, signals, emitters, reflectors,
  *  as shown in the default value of the config property below.    
  * */
 var BeamForming = function(conf) {
@@ -154,6 +188,12 @@ var BeamForming = function(conf) {
 		throw "Unknown signalType";
 	},
 
+	/**
+	 * Gets the displacement of the signal wave at a position in space and time 
+	 * after it has been transmitted by the emitter. 
+	 * @param em {Emitter}		The emitter which is already configured with a signalID. 
+	 * @param pos {Number[]}	The position in simulation space. 
+	 * @param tSim {Number}		The absolute time in the simulation model. */
 	getDisplacementAtPoint : function(em, pos, tSim) {
 		var sig = this.getSignalById(em.signalID);
 		var relPos = VecUtil.sub(pos, em.position);
