@@ -53,7 +53,7 @@
   }
  </script>
 
-  <!-- Code for the View and the specific Model data that is not resuable. -->
+ <!-- Code for the View and the specific Model data that is not reusable. -->
  <script type="text/javascript" language="Javascript" >
     function canvasClick(e) {
         //alert( e.toString() );
@@ -223,15 +223,15 @@
     }
     
     function initForm() {
-	var egSel = document.getElementById('emitterGeometry');
-	for (vn in EmitterGeoms) {
-		var o = new Option(vn);
-		o.value=vn;
-		egSel.appendChild(o);
-	}
-	calcDelays();
-	  // Start the worker.
-	  //document.worker.postMessage("Begin");
+		var egSel = document.getElementById('emitterGeometry');
+		for (vn in EmitterGeoms) {
+			var o = new Option(vn);
+			o.value=vn;
+			egSel.appendChild(o);
+		}
+		calcDelays();
+		// Start the worker.
+		//document.worker.postMessage("Begin");
     }
  </script>
  <style>
