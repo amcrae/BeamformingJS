@@ -1,0 +1,32 @@
+{
+  "name": "BeamformingJS",
+  "version": "1.2.0",
+  "description": "Beamforming in HTML5+Javascript",
+  "main": "gulpfile.js",
+  "dependencies": {
+    "gulp": "~3.9.1"
+  },
+  "devDependencies": {
+    "gulp": "~3.9.1",
+    "gulp-inline": "~0.1.1",
+    "del": "~2.2.2"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/amcrae/BeamformingJS.git"
+  },
+  "keywords": [
+    "Beamforming",
+    "Javascript",
+    "canvas",
+    "Physics"
+  ],
+  "author": "Andrew McRae",
+  "license": "Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License",
+  "bugs": {
+    "url": "https://github.com/amcrae/BeamformingJS/issues"
+  }
+}

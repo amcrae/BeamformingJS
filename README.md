@@ -1,16 +1,34 @@
 Beamforming in HTML5+Javascript
 ====================================
 
-
 This project is a mini toy application to simulate beamforming antenna arrays and
  let the user experiment with different array shapes to see what sort of radiation
  pattern results.
- 
+
 
 License
 -------
 Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License 
 as shown in the main html file.
+
+
+Build Environment
+-----------------
+The only action the build does at this point is bundle the javascript file into the HTML file.
+It is not really necessary as the application will run from src/ just fine.
+
+1. Install npm for your system.  
+`  sudo apt-get install npm`
+1. Install gulp with command line front end, globally.  
+`  sudo npm install --global gulp-cli`
+1. Make a local project directory.  
+`  mkdir BeamformingJS ; cd BeamformingJS`
+1. Clone the git repository to the local project directory.  
+`  git clone 'git@github.com:amcrae/BeamformingJS.git' `
+1. Fetch and install the required npm packages into the project directory:  
+`  npm install`
+1. Build the all-in-one HTML file into the dist/ folder.  
+`  gulp`
 
 
 Approximate History
