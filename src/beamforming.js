@@ -394,8 +394,7 @@ var BeamForming = function(conf) {
 				 */
 
 				if (calcCohere) {
-					// calc RMS diff of emitter contributions to determing
-					// coherence.
+					// Approximate coherence as the RMS diff of emitter displacement contributions.
 					for (var psi = 0; psi < pseries.length; psi++) {
 						D += Math.pow(Math.abs(pseries[psi] - pAvg), 2);
 					}
