@@ -165,8 +165,7 @@ var BeamForming = function(conf) {
 
 	/** Supports a single client modelChanged event handler, so demux to multiple listeners
 	 * would have to be handled by the provided function. */
-	modelChanged : null, // GUI event handler to show model after it has
-							// changed.
+	modelChanged : null, // GUI event handler to show model after it has changed.
 
 	/**
 	 * Does the actual Beamforming formula, which for a fixed frequency continuous wave carrier
@@ -349,20 +348,23 @@ var BeamForming = function(conf) {
 				var D = 0, pAvg = 0;
 				pseries.length = 0; // clear
 
-				/*
-				 * //Supersample pixels since lambda is much smaller than a
-				 * pixel for Ultrasonics. for (var dy=-0.2;dy<=0.2;dy+=0.1) {
-				 * for (var dx=-0.2;dx<=0.2;dx+=0.1) {
+				/* Too slow, disabled.
+				 * 
+				 * //Supersample pixels since lambda is much smaller than a pixel for Ultrasonics. 
+				 * for (var dy=-0.2;dy<=0.2;dy+=0.1) {
+				 *  for (var dx=-0.2;dx<=0.2;dx+=0.1) {
 				 */
 				var dx = 0, dy = 0;
 
 				// simple orthographic view inverse transform
-				var pos = [ simArea.minCorner[0] + (x + dx) * (simW) / w,
-						simArea.topLeft()[1] - (y + dy) * (simH) / h ];
+				var pos = [ 
+				            simArea.minCorner[0] + (x + dx) * (simW) / w,
+				            simArea.topLeft()[1] - (y + dy) * (simH) / h 
+				];
 
-				/*
-				 * //get temporal correlation at a single spatial point for
-				 * (var dp=-0.5;dp<=0.5;dp+=0.1) {
+				/* Disabled supersampling.
+				 * //get temporal correlation at a single spatial point 
+				 * for (var dp=-0.5;dp<=0.5;dp+=0.1) {
 				 */
 				var dp = 0;
 
@@ -372,21 +374,23 @@ var BeamForming = function(conf) {
 					var em = this.config.emitters[ei];
 					var sig = this.getSignalById(em.signalID);
 					var dt = dp / sig.frequency;
-					var spl = this.getDisplacementAtPoint(em, pos,
-							this.state.simTime + dt);
+					var spl = this.getDisplacementAtPoint(em, pos, this.state.simTime + dt);
 					pseries.push(spl);
 					P += spl;
 				}
 
-				/*
-				 * // calc RMS difference of timeshifted pressures from
-				 * unshifted pressure }
+				/* Disabled supersampling.
+				 * // calc RMS difference of timeshifted pressures from unshifted pressure 
+				 * }
 				 * //pseries[Math.round(pseries.length/2)]
 				 */
+				
 				maxPower = Math.max(maxPower, P);
 				pAvg = P / this.config.emitters.length;
-				/*
-				 * } }
+				
+				/* Disabled supersampling.
+				 *   } 
+				 * }
 				 */
 
 				if (calcCohere) {
@@ -401,8 +405,7 @@ var BeamForming = function(conf) {
 				// produce a pixel colour.
 
 				// show SPL as departure from medium blue.
-				var blue = Math.min(255, Math.max(0, Math.round(127 + P
-						* 350 / maxEmit)));
+				var blue = Math.min(255, Math.max(0, Math.round(127 + P * 350 / maxEmit)));
 
 				// invert the RMS temporal difference to get a coherence
 				// indicator.
@@ -439,8 +442,7 @@ var BeamForming = function(conf) {
 		// render the emitters as green pixels
 		for ( var ei in this.config.emitters) {
 			var em = this.config.emitters[ei];
-			var emPix = this.modelToImage(em.position, this.config.simArea,
-					canvasDims);
+			var emPix = this.modelToImage(em.position, this.config.simArea, canvasDims);
 			// var x = Math.round(w *
 			// (em.position[0]-this.config.simArea.left)/simW );
 			// var y = Math.round(h *
@@ -452,8 +454,7 @@ var BeamForming = function(conf) {
 			ibuff.data[ip + 1] = 255;
 			ibuff.data[ip + 2] = 0;
 		}
-		context.putImageData(ibuff, canvasRegion.topLeft[0],
-				canvasRegion.topLeft[1]);
+		context.putImageData(ibuff, canvasRegion.topLeft[0], canvasRegion.topLeft[1]);
 
 		//Render some stats, even though they can be shown separately in HTML labels etc.
 		/*context.strokeStyle = "white";
