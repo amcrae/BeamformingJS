@@ -5,6 +5,10 @@ This project is a mini toy application to simulate beamforming antenna arrays an
  let the user experiment with different array shapes to see what sort of radiation
  pattern results.
 
+Demo
+-----
+Last release build is available at: <https://amcrae.github.io/BeamformingJS/beamforming.html>
+
 
 License
 -------
