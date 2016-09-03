@@ -31,6 +31,14 @@ var VecUtil = {
 	degToRad: function(deg){  return Math.PI*deg/180.0 },
 	radToDeg: function(rad){  return 180.0*rad/Math.PI },
 
+	add: function(a,b){ 
+		var answer=[];
+		for (var k in a) {
+			answer.push(a[k]+b[k]);
+		}
+		return answer;
+	},
+	
 	sub: function(a,b){ 
 		var answer=[];
 		for (var k in a) {
@@ -103,11 +111,17 @@ var Box2D = function(minPos, size) {
   return {
      minCorner: minPos
     ,size: size
-    ,maxCorner:   function() { return VecUtils.add(this.minCorner, this.size) }
+    ,maxCorner:   function() { return VecUtil.add(this.minCorner, this.size) }
     ,topLeft:     function() { return [ this.minCorner[0], this.minCorner[1]+this.size[1] ] }
     ,bottomRight: function() { return [ this.minCorner[0]+this.size[0], this.minCorner[1] ] }
-    ,toString:	  function() { return "Box2D{minCorner:("+this.minCorner+"),size:("+ this.size+") }" }
-  }
+    ,toString:	  function() { return "Box2D{minCorner:("+this.minCorner+"),size:("+ this.size+") }"; }
+    ,contains:	  function(point) { 
+    	return this.minCorner[0]<=point[0]
+    		&& this.minCorner[1]<=point[1]	
+    		&& this.maxCorner()[0]>=point[0]
+    		&& this.maxCorner()[1]>=point[1];
+    }
+  };
 }
 
 
@@ -136,6 +150,7 @@ var Emitter = function(props) {
  *  as shown in the default value of the config property below.    
  * */
 var BeamForming = function(conf) {
+ var _bf = this;
  var bf = {
     config:{
             medium:{propagationSpeed:343},
@@ -245,20 +260,79 @@ var BeamForming = function(conf) {
 	},
 
 	setEmitterDelays : function(poffs) {
+		var changeset = [];
 		for ( var i in poffs) {
 			var ed = poffs[i];
 			var e = this.getEmitterById(ed.id);
 			e.delay = ed.delay;
+			changeset.push(e);
 		}
 		if (this.modelChanged)
-			this.modelChanged();
+			this.modelChanged({emitters:changeset});
 	},
 
-	simulateUntilSteady : function() {
-		this.state = {};
+	resetState : function() {
+		this.state = { };
 		this.state.simTime = 0.0;
-		// should move sim code to this method
+		this.state.simProgress = 0.0;
 	},
+
+	/** Queue of regions to be simulated using current Beamforming object parameters. */
+	simTaskQueue: [ ],
+	
+	doNextTask: function() {
+		if (this.simTaskQueue.length>0) {
+			var task = this.simTaskQueue.shift();
+			this.simulateUntilSteady(task.simArea);
+			this.state.simProgress = Math.min(100, task.beamFormer.state.simProgress + task.progressIncrement);
+			task.callback(task.simArea, (this.simTaskQueue.length>0));
+			setTimeout(this._handleNextSimTask, 6);
+		}		
+	},
+
+	
+	/**
+	 * Signature of "completionCallback" visitor must be: 
+	 *   function(region, isFinished)
+	 * The region is the region whose simulation has been completed,
+	 * The isFinished==true when no more tasks remain to do,
+	 * */
+	startSimulationAsynch: function(nSubRegions, completionCallback) {
+		var _t = this;
+		this.simTaskQueue = [ ];
+		for (var _si = 0; _si < nSubRegions; _si++) {
+			var reg = new Box2D(
+				[	this.config.simArea.minCorner[0],
+					this.config.simArea.minCorner[1] +
+						_si * this.config.simArea.size[1] / nSubRegions 
+				],
+				[ this.config.simArea.size[0],
+				  this.config.simArea.size[1] / nSubRegions
+				]
+			);
+			this.simTaskQueue.push( 
+				{ 	msgType : "simulate",
+					beamFormer : _t,
+					simArea : reg ,
+					callback: completionCallback,
+					progressIncrement : 100 / nSubRegions
+				} 
+			);
+		}
+		//probably should be handled by client, as I'm making assumptions about browser environment.
+		setTimeout(this._handleNextSimTask, 5);
+	},
+
+	
+	/** Run simulation for region. */
+	simulateUntilSteady : function(region) {
+		//TODO: move simulation code here!
+		
+		if (this.modelChanged) this.modelChanged( {region:region, emitters:true} );
+	},
+	
+	
+	// ----------- View support functions for rendering. ----------------
 
 	/**
 	 * Transform a position in simulation model space to a image position in the View.
@@ -273,7 +347,8 @@ var BeamForming = function(conf) {
 				* (simDims.topLeft()[1] - position[1]) / simDims.size[1]);
 		return [ x, y ];
 	},
-
+	
+	
 	/** These are the different supported ways of representing the state of the 
 	 * wave propagation at a fixed instant of time. */
 	WAVE_DRAW_STYLES: [
@@ -281,17 +356,21 @@ var BeamForming = function(conf) {
 	           		"Disp",	  	// Vertical displacement.
 	           		"Cohere+Disp" //Both of the above in different colour channels.
 	           	],
+
 	
-	/** Render simulation state to a HTML5 Canvas element.
-	 * 
-	 *  */
-	renderStateToCanvas : function(canvas, rstyle, webworkers) {
-		this.state.simTime = 0.043; // state at time=simTime. Assuming
-		// transmission begins at t=0.
+	_x_unused_renderState : function(canvas, rstyle, webworkers) {
 		// alert("render at this point");
 		var context = canvas.getContext('2d');
 		context.setTransform(1, 0, 0, 1, 0, 0);
 
+		var _t = this; // the old one-two-capture trick.
+		
+		var nSubRegions = 8;
+		var simCompletion = function(region, isFinished, nextTask) {
+			
+		};
+		startSimulationAsynch(nsubRegions, completionCallback);
+		
 		var multiThreaded = (webworkers != null)
 				&& (typeof (Worker) !== "undefined")
 				&& webworkers.length >= 2;
@@ -300,7 +379,6 @@ var BeamForming = function(conf) {
 			var nThreads = webworkers.length;
 			var simRegions = [];
 			// var workers=[];
-			var _t = this; // the old one-two-capture trick.
 			for (var _zi = 0; _zi < nThreads; _zi++) {
 				var reg = new Box2D([
 						this.config.simArea.minCorner[0],
@@ -332,19 +410,27 @@ var BeamForming = function(conf) {
 
 		} else {
 			// No parallel rendering.
+			/*
 			// Render entire region in one task.
 			this._renderRegion(this.config.simArea, context, rstyle);
+			*/
+			while (simTaskQueue.length>0) {
+				var task = simTaskQueue.shift();
+				this._SimAndRenderRegion(task.region, context, rstyle);
+			}
+			
 		}
 	},
 	
-	/** Actual rendering into the given drawing context of
+	
+	/** Sima plus rendering into the given drawing context of
 	 * the wave state in the given simulation space region at the current model time.
 	 * 
 	 * @param simArea 	A Box2D defining the region whose wave state is to be rendered.
 	 * @param context	A 2D drawing context as defined by HTML5 Canvas element.
 	 * @param rstyle	One of the constnt values in WAVE_DRAW_STYLES.	
 	 * */
-	_renderRegion : function(simArea, context, rstyle) {
+	_SimAndRenderRegion : function(simArea, context, rstyle) {
 		// Do coherence calcs??
 		var calcCohere = (rstyle.indexOf("Cohere") >= 0);
 
@@ -452,11 +538,6 @@ var BeamForming = function(conf) {
 				var ip = (y * w + x) * 4;
 
 				// write to colour channels
-				/*
-				 * for (var c = 0; c < 3; c += 1) { ibuff.data[ip + c] =
-				 * grey; }
-				 */
-
 				if (rstyle == "Cohere+Disp") {
 					ibuff.data[ip + 0] = red; // red
 					ibuff.data[ip + 1] = 0; // green
@@ -480,18 +561,17 @@ var BeamForming = function(conf) {
 		// render the emitters as green pixels
 		for ( var ei in this.config.emitters) {
 			var em = this.config.emitters[ei];
-			var emPix = this.modelToImage(em.position, this.config.simArea, canvasDims);
-			// var x = Math.round(w *
-			// (em.position[0]-this.config.simArea.left)/simW );
-			// var y = Math.round(h *
-			// (this.config.simArea.top-em.position[1])/simH );
+			if (!simArea.contains(em.position)) continue;
+			var emPix = VecUtil.sub(this.modelToImage(em.position, this.config.simArea, canvasDims), canvasRegion.topLeft);
 			x = emPix[0];
 			y = emPix[1];
 			var ip = (y * w + x) * 4;
 			ibuff.data[ip + 0] = 0;
 			ibuff.data[ip + 1] = 255;
 			ibuff.data[ip + 2] = 0;
+			ibuff.data[ip + 3] = 255; // alpha
 		}
+		
 		context.putImageData(ibuff, canvasRegion.topLeft[0], canvasRegion.topLeft[1]);
 
 		//Render some stats, even though they can be shown separately in HTML labels etc.
@@ -499,11 +579,22 @@ var BeamForming = function(conf) {
 		context.font = "normal 10px serif";
 		context.strokeText("t="+(this.state.simTime.toFixed(3).toString()), 20,20 );
 		 */
-
-		if (this.modelChanged) this.modelChanged();
+	},
+	
+	
+	/** Render a region of current simulation wave state to a HTML canvas element. */
+	renderRegionToCanvas: function(simRegion, canvas, rstyle) {
+		var context = canvas.getContext('2d');
+		context.setTransform(1, 0, 0, 1, 0, 0);
+		this._SimAndRenderRegion(simRegion, context, rstyle);		
 	}
-
+	
   };
+ 
+  bf._handleNextSimTask = function() {
+		return bf.doNextTask();
+  }
+  
   bf.config=conf;
   return bf;
 }

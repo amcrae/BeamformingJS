@@ -174,28 +174,37 @@
             {id:"T0", position:[-8,16], geomType:"Circle", radius:0.1}
         ]
     };
+
+    var renderState = function(simRegion) {
+    	var reg = simRegion || bf.config.simArea;
+        var can = document.getElementById('canvas0');
+        var rstyle = document.getElementById('fieldRendering').value;
+        bf.renderRegionToCanvas(reg, can, rstyle, /*document.webworkers*/null);
+    }
     
-    function modelChangedHandler() {
-        var emds = ""; 
-        for (var i in bf.config.emitters) {
-            var em = bf.config.emitters[i];
-            emds += " "+em.id+":"+VecUtil.toEngFormat(em.delay,'s |');
-        }
-        document.getElementById('stats').value = 
-             "Model Time:"+bf.state.simTime.toFixed(5)+"s"
-            +" | Signal Freq:"+bf.config.signals[0].frequency+"Hz Duration:"+bf.config.signals[0].duration.toFixed(3)
-            +" | Speed:"+bf.config.medium.propagationSpeed+"m/s \n"
-            +"Emitter delays:"+emds;
+    function modelChangedHandler(delta) {
+    	if (delta["emitters"] || delta["_All"]) {
+	        var emds = ""; 
+	        for (var i in bf.config.emitters) {
+	            var em = bf.config.emitters[i];
+	            emds += " "+em.id+":"+VecUtil.toEngFormat(em.delay,'s |');
+	        }
+	        document.getElementById('stats').value = 
+	             "Model Time:"+bf.state.simTime.toFixed(5)+"s"
+	            +" | Signal Freq:"+bf.config.signals[0].frequency+"Hz Duration:"+bf.config.signals[0].duration.toFixed(3)
+	            +" | Speed:"+bf.config.medium.propagationSpeed+"m/s \n"
+	            +"Emitter delays:"+emds;
+    	}
+    	
+    	if (delta["region"]) {
+    		renderState(delta.region);
+    	} else if (delta["_All"]) {
+    		renderState();
+    	}
     }
     
     bf = new BeamForming(simConfig);
     bf.modelChanged = modelChangedHandler;
-    
-    var renderState = function() {
-        var can = document.getElementById('canvas0');
-        var rstyle = document.getElementById('fieldRendering').value;
-        bf.renderStateToCanvas(can, rstyle, /*document.webworkers*/null);
-    }
 
     var calcDelays = function() {
         var angDeg = parseInt( document.getElementById('beamAngle').value );
@@ -210,16 +219,21 @@
         calcDelays();
     }
 
-    var renderBeamAngle = function(angDeg){ 
+    var simProgress = function(event) {
+    	document.getElementById('simProgress').innerHTML = bf.state.simProgress.toFixed()+"%"    	
+    }
+    
+    var simulateBeamAngle = function(angDeg){ 
+		bf.resetState();
         var phaseDelays = bf.formBeamDelays('E0', VecUtil.degToRad(angDeg) );
         bf.setEmitterDelays(phaseDelays);
-        bf.simulateUntilSteady();
-        renderState();
+		bf.state.simTime = 0.043; 
+        bf.startSimulationAsynch(8, simProgress);
     };
     
     var makeAndRender = function(){ 
       var angleDeg = parseInt( document.getElementById('beamAngle').value );
-      renderBeamAngle(angleDeg); 
+      simulateBeamAngle(angleDeg);
     }
     
     function initForm() {
@@ -271,7 +285,8 @@
  </label>
 </span>
 <span class="field">Simulation:<br>
- <button onclick="makeAndRender()">Run!</button> <!--<input id="cbPara" type="checkbox">Parallel</input>--> <br/>
+ <button onclick="makeAndRender()">Run!</button> <span id="simProgress"></span><br/>
+ <!--<input id="cbPara" type="checkbox">Parallel</input>--> 
 </span><br/>
 <textarea id="stats" readonly style="width:608px; height:4em; font-size:6pt;"></textarea>
 
