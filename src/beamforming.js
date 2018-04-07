@@ -155,7 +155,7 @@ var BeamForming = function(conf) {
     config:{
             medium:{propagationSpeed:343},
             simArea:new Box2D([-10,-10], [20,20]),
-            signals:{id:'S0',  signalType:"Sine", frequency:440},
+            signals:[{id:'S0',  signalType:"Sine", frequency:440}],
             emitters:[
                 {id:'E0', emitterType:'Omni', signalID:'S0', position:[ 0, 0],  },
             ],
@@ -300,6 +300,7 @@ var BeamForming = function(conf) {
 	startSimulationAsynch: function(nSubRegions, completionCallback) {
 		var _t = this;
 		this.simTaskQueue = [ ];
+		completionCallback({},false);
 		for (var _si = 0; _si < nSubRegions; _si++) {
 			var reg = new Box2D(
 				[	this.config.simArea.minCorner[0],
@@ -336,9 +337,9 @@ var BeamForming = function(conf) {
 
 	/**
 	 * Transform a position in simulation model space to a image position in the View.
-	 * @param position:		VecUtil array 
-	 * @param simDims:		Box2D in world space. 
-	 * @param imageDims:	array in pixel units.
+	 * @param position:		VecUtil array of a world position to transform.
+	 * @param simDims:		Box2D in world space representing the region visible in the View. 
+	 * @param imageDims:	array of image dimensions [x,y] in pixel units.
 	 */
 	modelToImage : function(position, simDims, imageDims) {
 		var x = Math.round(imageDims[0]
@@ -587,6 +588,29 @@ var BeamForming = function(conf) {
 		var context = canvas.getContext('2d');
 		context.setTransform(1, 0, 0, 1, 0, 0);
 		this._SimAndRenderRegion(simRegion, context, rstyle);		
+	},
+	
+	
+	/** Render an antenna's emitting elements as dots on a HTML canvas element. */
+	renderAntennaToCanvas: function(emitters, canvas, canStyle) {
+		//Auto-size to 3 wavelengths of the primary carrier wave, as the emitters should be designed smaller than this size anyway.
+		var simDim = 3 * this.config.medium.propagationSpeed / this.config.signals[0].frequency;  
+		var simArea = new Box2D( [-simDim/2,-simDim/2], [simDim,simDim] );
+		
+		var context = canvas.getContext('2d');
+		context.setTransform(1, 0, 0, 1, 0, 0);
+		var canvasDims = [ context.canvas.width, context.canvas.height ];
+		
+		context.fillStyle = 'black';
+		context.fillRect(0,0, canvasDims[0], canvasDims[1]);
+		// render the emitters as green pixels
+		context.fillStyle = canStyle || 'green';
+		for ( var ei in emitters) {
+			var em = emitters[ei];
+			if (!simArea.contains(em.position)) continue;
+			var emPix = this.modelToImage(em.position, simArea, canvasDims);
+			context.fillRect(emPix[0], emPix[1], 1,1);
+		}
 	}
 	
   };
