@@ -424,7 +424,7 @@ var BeamForming = function(conf) {
 	},
 	
 	
-	/** Sima plus rendering into the given drawing context of
+	/** Simulation plus rendering into the given drawing context of
 	 * the wave state in the given simulation space region at the current model time.
 	 * 
 	 * @param simArea 	A Box2D defining the region whose wave state is to be rendered.
