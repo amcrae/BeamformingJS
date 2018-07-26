@@ -7,9 +7,14 @@ var del = require('del');
 var inline = require('gulp-inline');
 //  , uglify = require('gulp-uglify')
 //  , minifyCss = require('gulp-minify-css');
+var mergeStream = require('merge-stream');
 
 var paths = {
-  scripts: ['src/*.js'],
+  scripts: ['src/js/*.js'],
+  extlibs: [ "node_modules/angular/angular.min.js","node_modules/angular/angular.min.js.map",
+	  		 "node_modules/angular/angular.js"
+	  		],
+  pages: ["src/*.html"],
   images: 'resources/*',
   build: 'dist'
 };
@@ -19,7 +24,15 @@ gulp.task('clean', function() {
   return del([paths.build]);
 });
 
-gulp.task('scripts', ['clean'], function() {
+
+gulp.task("extlibs", ['clean'], function() { 
+	var extlibs = gulp.src(paths.extlibs)
+		.pipe(gulp.dest('dist/js'));
+	return extlibs;
+ }
+);
+
+gulp.task('scripts', ['clean','extlibs'], function() {
   // Minify and copy all JavaScript (except vendor scripts) 
   // with sourcemaps all the way down
   /*
@@ -31,15 +44,11 @@ gulp.task('scripts', ['clean'], function() {
     .pipe(sourcemaps.write())
     .pipe(gulp.dest('build/js'));
   */
-	return gulp.src('src/beamforming.html')
-	  .pipe(inline({
-	    base: 'src/',
-	    //js: uglify,
-	    //css: minifyCss,
-	    disabledTypes: ['svg', 'img'], 
-	    ignore: ['./css/do-not-inline-me.css']
-	  }))
-	  .pipe(gulp.dest('dist/'));
+	var html = gulp.src(paths.pages)
+	  	.pipe(gulp.dest('dist/'));
+	var scripts = gulp.src(paths.scripts)
+  		.pipe(gulp.dest('dist/js'));
+	return mergeStream(html, scripts);
 });
 
 gulp.task('default', ['scripts']);
