@@ -1,13 +1,15 @@
-Beamforming in HTML5+Javascript
+Beamforming in HTML5+AngularJS
 ====================================
 
 This project is a mini toy application to simulate beamforming antenna arrays and
  let the user experiment with different array shapes to see what sort of radiation
  pattern results.
 
+This branch of the project is my first attempt to port a simple client-side only application into the AngularJS 1.6 framework. 
+
 Demo
 -----
-Last release build is available at: <https://amcrae.github.io/BeamformingJS/beamforming.html>
+Demo of the AngularJS version is not yet deployed, it's a work-in-progress.
 
 
 License
@@ -18,8 +20,8 @@ as shown in the main html file.
 
 Build Environment
 -----------------
-The only action the build does at this point is bundle the javascript file into the HTML file.
-It is not really necessary as the application will run from src/ just fine.
+The only action the build does at this point is download the vendor libraries.
+It could optionally bundle/inline the javascript file into the HTML file, but that is not really necessary as the application will run from src/ just fine.
 
 1. Install npm for your system.  
 `  sudo apt-get install npm`
