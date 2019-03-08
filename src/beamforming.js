@@ -40,19 +40,27 @@ var VecUtil = {
 	},
 	
 	sub: function(a,b){ 
-		var answer=[];
-		for (var k in a) {
-			answer.push(a[k]-b[k]);
+		//This produces a massive speedup in the common case of 2D.
+		if (a.length==2) return [ a[0]-b[0], a[1]-b[1] ];
+		else {
+		  var answer=[];
+		  for (var k in a) {
+			  answer.push(a[k]-b[k]);
+		  }
+		  return answer;
 		}
-		return answer;
 	},
 
 	mag: function(v){ 
-		var answer=0;
-		for (var k in v) {
-			answer += ( v[k] * v[k] );
+		//This produces a massive speedup in the common case of 2D.
+		if (v.length==2) return Math.sqrt( v[0]*v[0] + v[1]*v[1] );
+		else {
+		  var answer=0;
+		  for (var k in v) {
+			  answer += ( v[k] * v[k] );
+		  }
+		  return Math.sqrt(answer);
 		}
-		return Math.sqrt(answer);
 	},
 
 	dot: function(a,b){
